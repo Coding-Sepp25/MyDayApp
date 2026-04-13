@@ -1,297 +1,563 @@
-/* ===== RESET & BASE ===== */
+/* ===== RESET ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface2: #334155;
-  --accent: #6366f1;
-  --accent-light: #818cf8;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --danger: #ef4444;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --radius: 14px;
+  --bg: #191919;
+  --bg-elevated: #202020;
+  --bg-hover: #2c2c2c;
+  --bg-active: #333;
+  --sidebar-bg: #1e1e1e;
+  --border: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.1);
+  --text: #ebebeb;
+  --text-secondary: #9b9b9b;
+  --text-tertiary: #5c5c5c;
+  --accent: #2383e2;
+  --accent-hover: #1b6ec2;
+  --red: #eb5757;
+  --green: #4dab6f;
+  --orange: #d9730d;
+  --yellow: #cb912f;
+  --purple: #9065b0;
+  --pink: #c14c8a;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --font-mono: "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
-html { font-size: 16px; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
-  padding-top: var(--safe-top);
-  padding-bottom: calc(70px + var(--safe-bottom));
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
   -webkit-user-select: none;
   user-select: none;
   overflow-x: hidden;
 }
 
-/* ===== HEADER ===== */
-.header {
+/* ===== LAYOUT ===== */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 50;
   background: var(--bg);
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--surface2);
+  padding: calc(8px + var(--safe-top)) 16px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-.header h1 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--accent), var(--accent-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.topbar-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
 }
 
-.header .date-display {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 2px;
+.topbar-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  flex: 1;
 }
 
-/* ===== PAGES ===== */
+.topbar-date {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+  flex: 1;
+  padding: 0 0 calc(60px + var(--safe-bottom));
+  overflow-y: auto;
+}
+
 .page {
   display: none;
-  padding: 16px 20px;
-  animation: fadeIn 0.25s ease;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+  animation: pageIn 0.2s ease;
 }
 
 .page.active { display: block; }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes pageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* ===== BOTTOM NAV ===== */
+/* ===== PAGE HEADER ===== */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+/* ===== BOTTOM NAV (Notion mobile style) ===== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--surface2);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
   display: flex;
-  justify-content: space-around;
-  padding: 8px 0 calc(8px + var(--safe-bottom));
+  padding: 6px 8px calc(6px + var(--safe-bottom));
   z-index: 100;
+  gap: 4px;
 }
 
-.nav-item {
+.nav-btn {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
+  padding: 6px 0;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   font-size: 0.65rem;
-  padding: 6px 12px;
+  font-family: var(--font);
   cursor: pointer;
-  transition: color 0.2s;
-}
-
-.nav-item.active { color: var(--accent-light); }
-.nav-item svg { width: 24px; height: 24px; }
-
-/* ===== CARDS ===== */
-.card {
-  background: var(--surface);
   border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  border: 1px solid transparent;
-  transition: border-color 0.2s;
+  transition: all 0.15s;
 }
 
-.card:active { border-color: var(--accent); }
-
-/* ===== INPUTS ===== */
-.input-group {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+.nav-btn.active {
+  color: var(--text);
+  background: var(--bg-hover);
 }
 
+.nav-btn svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.8;
+}
+
+/* ===== INPUTS (Notion style) ===== */
 input[type="text"],
 input[type="time"],
 input[type="date"],
 textarea,
 select {
   width: 100%;
-  background: var(--surface2);
-  border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 12px 14px;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 8px 10px;
   color: var(--text);
-  font-size: 1rem;
-  font-family: inherit;
+  font-size: 0.9rem;
+  font-family: var(--font);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
   -webkit-user-select: text;
   user-select: text;
 }
 
 input:focus, textarea:focus, select:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(35,131,226,0.15);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
 }
 
 textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 120px;
+  line-height: 1.6;
 }
 
 /* ===== BUTTONS ===== */
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 10px;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: 600;
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--font);
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
+  transition: background 0.15s;
   white-space: nowrap;
 }
 
-.btn:active { opacity: 0.8; transform: scale(0.97); }
-.btn-sm { padding: 8px 14px; font-size: 0.85rem; }
-.btn-danger { background: var(--danger); }
-.btn-outline {
+.btn:hover { background: var(--accent-hover); }
+.btn:active { transform: scale(0.98); }
+
+.btn-ghost {
   background: transparent;
-  border: 2px solid var(--accent);
-  color: var(--accent-light);
+  color: var(--text-secondary);
 }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
+
 .btn-full { width: 100%; }
 
-/* ===== TODO ITEMS ===== */
-.todo-item {
+.btn-danger { background: var(--red); }
+.btn-danger:hover { background: #d44; }
+
+/* ===== Notion-style inline add ===== */
+.add-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border-radius: var(--radius);
-  margin-bottom: 8px;
+  gap: 8px;
+  padding: 6px 0;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  font-family: var(--font);
 }
 
-.todo-check {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid var(--text-muted);
+.add-row:hover { color: var(--text-secondary); }
+.add-row svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ===== TODO / CHECKLIST (Notion style) ===== */
+.todo-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.todo-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  group: todo;
+}
+
+.todo-checkbox {
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+  border: 1.5px solid var(--text-tertiary);
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
-.todo-check.done {
-  background: var(--success);
-  border-color: var(--success);
+.todo-checkbox.checked {
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
-.todo-check.done::after {
+.todo-checkbox.checked::after {
   content: '';
-  width: 8px;
-  height: 5px;
-  border-left: 2px solid white;
-  border-bottom: 2px solid white;
-  transform: rotate(-45deg) translateY(-1px);
+  width: 6px;
+  height: 3.5px;
+  border-left: 1.5px solid white;
+  border-bottom: 1.5px solid white;
+  transform: rotate(-45deg) translateY(-0.5px);
 }
 
-.todo-text { flex: 1; font-size: 0.95rem; }
-.todo-text.done { text-decoration: line-through; color: var(--text-muted); }
+.todo-content {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  min-height: 24px;
+}
 
-.todo-delete {
+.todo-content.checked {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+.todo-actions {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.todo-item:hover .todo-actions { opacity: 1; }
+
+/* On touch devices, always show */
+@media (hover: none) {
+  .todo-actions { opacity: 0.5; }
+}
+
+.icon-btn {
   background: none;
   border: none;
-  color: var(--text-muted);
-  font-size: 1.2rem;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px;
-}
-
-/* ===== NOTES ===== */
-.note-preview {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-top: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.note-date {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-
-.note-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
-/* ===== REMINDERS ===== */
-.reminder-item {
+  border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border-radius: var(--radius);
+  justify-content: center;
+}
+
+.icon-btn:hover { background: var(--bg-hover); color: var(--text); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+/* ===== INLINE EDITOR ===== */
+.inline-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  width: 100%;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.inline-input::placeholder { color: var(--text-tertiary); }
+
+/* ===== DIVIDER ===== */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+/* ===== SECTION ===== */
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 8px;
 }
 
-.reminder-time {
-  background: var(--accent);
-  color: white;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
+/* ===== JOURNAL BLOCK ===== */
+.journal-block {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.journal-block textarea {
+  border: none;
+  background: transparent;
+  padding: 0;
+  min-height: 80px;
+  font-size: 0.9rem;
+}
+
+.journal-block textarea:focus {
+  box-shadow: none;
+}
+
+.journal-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.journal-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* ===== NOTES LIST (Notion page list style) ===== */
+.note-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.note-row:hover { background: var(--bg-hover); }
+.note-row:active { background: var(--bg-active); }
+
+.note-icon {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
   flex-shrink: 0;
 }
 
-.reminder-text { flex: 1; font-size: 0.95rem; }
+.note-info { flex: 1; min-width: 0; }
 
-/* ===== SECTION TITLES ===== */
-.section-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 12px;
+.note-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== REMINDER ROW ===== */
+.reminder-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  transition: background 0.1s;
 }
 
-/* ===== EMPTY STATE ===== */
-.empty-state {
+.reminder-row:hover { background: var(--bg-hover); }
+
+.reminder-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  background: var(--bg-active);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  min-width: 50px;
   text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
 }
 
-.empty-state .emoji { font-size: 2.5rem; margin-bottom: 12px; }
-.empty-state p { font-size: 0.95rem; }
+.reminder-badge.upcoming { background: rgba(35,131,226,0.15); color: var(--accent); }
+.reminder-badge.past { background: var(--bg-active); color: var(--text-tertiary); }
 
-/* ===== MODAL ===== */
+.reminder-info { flex: 1; min-width: 0; }
+
+.reminder-label {
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.reminder-date {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.reminder-row.past-row { opacity: 0.45; }
+
+/* ===== STATS (Notion database style) ===== */
+.stats-bar {
+  display: flex;
+  gap: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.stat {
+  flex: 1;
+  padding: 14px 12px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+
+.stat:last-child { border-right: none; }
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* ===== HISTORY ENTRIES ===== */
+.history-group { margin-bottom: 20px; }
+
+.history-date {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  margin-bottom: 6px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 5;
+}
+
+.history-entry {
+  padding: 8px 12px;
+  border-left: 2px solid var(--border-strong);
+  margin-left: 4px;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.history-entry-time {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-bottom: 2px;
+}
+
+/* ===== MODAL (Notion style bottom sheet) ===== */
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.5);
   z-index: 200;
   align-items: flex-end;
   justify-content: center;
@@ -300,74 +566,154 @@ textarea {
 .modal-overlay.open { display: flex; }
 
 .modal {
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
-  padding: 24px 20px calc(24px + var(--safe-bottom));
+  background: var(--bg-elevated);
+  border-radius: 12px 12px 0 0;
   width: 100%;
-  max-width: 500px;
-  max-height: 85dvh;
+  max-width: 560px;
+  max-height: 90dvh;
   overflow-y: auto;
-  animation: slideUp 0.3s ease;
+  animation: sheetUp 0.25s ease;
+  padding: 0;
 }
 
-@keyframes slideUp {
+@keyframes sheetUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 
-.modal h2 {
-  font-size: 1.2rem;
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--text-tertiary);
+  border-radius: 2px;
+  margin: 10px auto;
+}
+
+.modal-body {
+  padding: 8px 20px calc(20px + var(--safe-bottom));
+}
+
+.modal-body h2 {
+  font-size: 1rem;
+  font-weight: 600;
   margin-bottom: 16px;
 }
 
-.modal-actions {
+.modal-body .field {
+  margin-bottom: 12px;
+}
+
+.modal-body .field label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.modal-footer {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  padding: 12px 20px calc(12px + var(--safe-bottom));
+  border-top: 1px solid var(--border);
 }
 
-.modal-actions .btn { flex: 1; }
+.modal-footer .btn { flex: 1; }
 
-/* ===== STATS ===== */
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+/* ===== NOTE EDITOR (full page) ===== */
+.note-editor {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 150;
+  flex-direction: column;
 }
 
-.stat-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 16px;
-  text-align: center;
+.note-editor.open { display: flex; }
+
+.note-editor-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(8px + var(--safe-top)) 12px 8px;
+  border-bottom: 1px solid var(--border);
 }
 
-.stat-number {
+.note-editor-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.note-editor-body .title-input {
   font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--accent-light);
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-/* ===== HISTORY ===== */
-.history-day {
-  margin-bottom: 20px;
-}
-
-.history-date {
-  font-size: 0.85rem;
   font-weight: 700;
-  color: var(--accent-light);
-  margin-bottom: 8px;
-  padding-left: 4px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.note-editor-body .title-input:focus {
+  box-shadow: none;
+}
+
+.note-editor-body .content-input {
+  font-size: 0.95rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  min-height: 300px;
+  line-height: 1.7;
+}
+
+.note-editor-body .content-input:focus {
+  box-shadow: none;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-tertiary);
+}
+
+.empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+.empty p { font-size: 0.88rem; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: calc(72px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 300;
+  animation: toastIn 0.2s ease;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--bg-active); border-radius: 3px; }
+
+/* ===== RESPONSIVE ===== */
+@media (min-width: 768px) {
+  .page { padding: 32px 40px 40px; }
+  .bottom-nav { max-width: 400px; left: 50%; transform: translateX(-50%); border-radius: 12px 12px 0 0; }
+}

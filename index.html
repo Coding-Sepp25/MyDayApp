@@ -5,118 +5,176 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#191919">
   <title>MyDay</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.svg">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="app">
 
-  <!-- HEADER -->
-  <div class="header">
-    <h1>MyDay</h1>
-    <div class="date-display" id="dateDisplay"></div>
-  </div>
-
-  <!-- ===== PAGE: HEUTE ===== -->
-  <div class="page active" id="page-today">
-    <div class="section-title">Aufgaben</div>
-    <div class="input-group">
-      <input type="text" id="todoInput" placeholder="Neue Aufgabe...">
-      <button class="btn btn-sm" onclick="addTodo()">+</button>
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-icon" id="topbarIcon"></div>
+      <div class="topbar-title" id="topbarTitle">Heute</div>
+      <div class="topbar-date" id="topbarDate"></div>
     </div>
-    <div id="todoList"></div>
 
-    <div class="section-title" style="margin-top:24px">Was hast du heute gemacht?</div>
-    <textarea id="quickNote" placeholder="Schreib hier rein was du heute erlebt oder erledigt hast..."></textarea>
-    <button class="btn btn-full" style="margin-top:12px" onclick="saveQuickNote()">Eintrag speichern</button>
-  </div>
+    <div class="main">
 
-  <!-- ===== PAGE: NOTIZEN ===== -->
-  <div class="page" id="page-notes">
-    <div class="section-title">Meine Notizen</div>
-    <button class="btn btn-outline btn-full" style="margin-bottom:16px" onclick="openNoteModal()">+ Neue Notiz</button>
-    <div id="notesList"></div>
-  </div>
+      <!-- ===== HEUTE ===== -->
+      <div class="page active" id="page-today">
+        <div class="page-header">
+          <div class="page-header-icon">&#9788;</div>
+          <h1>Heute</h1>
+          <p id="todayDateLong"></p>
+        </div>
 
-  <!-- ===== PAGE: ERINNERUNGEN ===== -->
-  <div class="page" id="page-reminders">
-    <div class="section-title">Erinnerungen</div>
-    <button class="btn btn-outline btn-full" style="margin-bottom:16px" onclick="openReminderModal()">+ Neue Erinnerung</button>
-    <div id="reminderList"></div>
-  </div>
+        <div class="section-label">Aufgaben</div>
+        <div class="todo-list" id="todoList"></div>
+        <div id="todoInputRow" style="display:flex;gap:8px;align-items:center;padding:4px 0">
+          <input type="text" class="inline-input" id="todoInput" placeholder="Aufgabe hinzufuegen..." style="flex:1">
+        </div>
 
-  <!-- ===== PAGE: VERLAUF ===== -->
-  <div class="page" id="page-history">
-    <div class="section-title">Deine Woche</div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number" id="statTasks">0</div>
-        <div class="stat-label">Aufgaben erledigt</div>
+        <hr class="divider">
+
+        <div class="section-label">Tagebuch</div>
+        <div class="journal-block">
+          <textarea id="quickNote" placeholder="Was hast du heute gemacht? Was ist passiert?"></textarea>
+          <div class="journal-meta">
+            <span class="journal-time" id="journalTime"></span>
+            <button class="btn" onclick="saveQuickNote()">Speichern</button>
+          </div>
+        </div>
+
+        <div id="todayEntries"></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number" id="statNotes">0</div>
-        <div class="stat-label">Notizen</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="statStreak">0</div>
-        <div class="stat-label">Tage-Streak</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="statReminders">0</div>
-        <div class="stat-label">Erinnerungen</div>
-      </div>
-    </div>
-    <div class="section-title">Vergangene Eintraege</div>
-    <div id="historyList"></div>
-  </div>
 
-  <!-- ===== BOTTOM NAV ===== -->
-  <nav class="bottom-nav">
-    <button class="nav-item active" onclick="switchPage('today', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span>Heute</span>
-    </button>
-    <button class="nav-item" onclick="switchPage('notes', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      <span>Notizen</span>
-    </button>
-    <button class="nav-item" onclick="switchPage('reminders', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span>Erinnern</span>
-    </button>
-    <button class="nav-item" onclick="switchPage('history', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span>Verlauf</span>
-    </button>
-  </nav>
-
-  <!-- ===== MODAL: NOTIZ ===== -->
-  <div class="modal-overlay" id="noteModal">
-    <div class="modal">
-      <h2 id="noteModalTitle">Neue Notiz</h2>
-      <input type="text" id="noteTitle" placeholder="Titel" style="margin-bottom:12px">
-      <textarea id="noteContent" placeholder="Schreib hier deine Notiz..." style="min-height:150px"></textarea>
-      <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeNoteModal()">Abbrechen</button>
-        <button class="btn" onclick="saveNote()">Speichern</button>
+      <!-- ===== NOTIZEN ===== -->
+      <div class="page" id="page-notes">
+        <div class="page-header">
+          <div class="page-header-icon">&#128196;</div>
+          <h1>Notizen</h1>
+          <p>Deine Gedanken und Ideen</p>
+        </div>
+        <button class="add-row" onclick="openNoteEditor()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+          Neue Seite
+        </button>
+        <div id="notesList" style="margin-top:4px"></div>
       </div>
-    </div>
-  </div>
 
-  <!-- ===== MODAL: ERINNERUNG ===== -->
-  <div class="modal-overlay" id="reminderModal">
-    <div class="modal">
-      <h2>Neue Erinnerung</h2>
-      <input type="text" id="reminderText" placeholder="Woran erinnern?" style="margin-bottom:12px">
-      <input type="date" id="reminderDate" style="margin-bottom:12px">
-      <input type="time" id="reminderTime" style="margin-bottom:12px">
-      <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeReminderModal()">Abbrechen</button>
-        <button class="btn" onclick="saveReminder()">Speichern</button>
+      <!-- ===== ERINNERUNGEN ===== -->
+      <div class="page" id="page-reminders">
+        <div class="page-header">
+          <div class="page-header-icon">&#128276;</div>
+          <h1>Erinnerungen</h1>
+          <p>Vergiss nichts Wichtiges</p>
+        </div>
+        <button class="add-row" onclick="openReminderModal()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+          Neue Erinnerung
+        </button>
+        <div id="reminderList" style="margin-top:8px"></div>
+      </div>
+
+      <!-- ===== VERLAUF ===== -->
+      <div class="page" id="page-history">
+        <div class="page-header">
+          <div class="page-header-icon">&#128202;</div>
+          <h1>Verlauf</h1>
+          <p>Deine Woche im Ueberblick</p>
+        </div>
+
+        <div class="stats-bar">
+          <div class="stat">
+            <div class="stat-value" id="statTasks">0</div>
+            <div class="stat-label">Erledigt</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="statNotes">0</div>
+            <div class="stat-label">Notizen</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="statStreak">0</div>
+            <div class="stat-label">Streak</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="statReminders">0</div>
+            <div class="stat-label">Erinnerungen</div>
+          </div>
+        </div>
+
+        <div class="section-label">Eintraege</div>
+        <div id="historyList"></div>
       </div>
     </div>
+
+    <!-- ===== BOTTOM NAV ===== -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-page="today">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <span>Heute</span>
+      </button>
+      <button class="nav-btn" data-page="notes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+        <span>Notizen</span>
+      </button>
+      <button class="nav-btn" data-page="reminders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span>Erinnern</span>
+      </button>
+      <button class="nav-btn" data-page="history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+        <span>Verlauf</span>
+      </button>
+    </nav>
+
+    <!-- ===== NOTE EDITOR ===== -->
+    <div class="note-editor" id="noteEditor">
+      <div class="note-editor-topbar">
+        <button class="icon-btn" onclick="closeNoteEditor()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div style="flex:1"></div>
+        <button class="btn" onclick="saveNote()">Fertig</button>
+        <button class="icon-btn" id="noteDeleteBtn" onclick="deleteCurrentNote()" style="display:none">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+      </div>
+      <div class="note-editor-body">
+        <input type="text" class="title-input" id="noteTitle" placeholder="Ohne Titel">
+        <textarea class="content-input" id="noteContent" placeholder="Schreib los..."></textarea>
+      </div>
+    </div>
+
+    <!-- ===== REMINDER MODAL ===== -->
+    <div class="modal-overlay" id="reminderModal">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-body">
+          <h2>Neue Erinnerung</h2>
+          <div class="field">
+            <label>Woran erinnern?</label>
+            <input type="text" id="reminderText" placeholder="z.B. Arzttermin, Meeting...">
+          </div>
+          <div class="field">
+            <label>Datum</label>
+            <input type="date" id="reminderDate">
+          </div>
+          <div class="field">
+            <label>Uhrzeit</label>
+            <input type="time" id="reminderTime">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeReminderModal()">Abbrechen</button>
+          <button class="btn" onclick="saveReminder()">Speichern</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="app.js"></script>
