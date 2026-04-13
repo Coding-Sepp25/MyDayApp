@@ -58,7 +58,8 @@ const pageConfig = {
   today: { icon: '&#9788;', title: 'Heute' },
   notes: { icon: '&#128196;', title: 'Notizen' },
   reminders: { icon: '&#128276;', title: 'Erinnerungen' },
-  history: { icon: '&#128202;', title: 'Verlauf' }
+  history: { icon: '&#128202;', title: 'Verlauf' },
+  ai: { icon: '&#10024;', title: 'KI' }
 };
 
 function switchPage(name) {
@@ -75,6 +76,7 @@ function switchPage(name) {
   if (name === 'reminders') renderReminders();
   if (name === 'history') renderHistory();
   if (name === 'today') renderTodayEntries();
+  if (name === 'ai') initAiPage();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -448,6 +450,151 @@ function renderHistory() {
     </div>
   `).join('');
 }
+
+// ===== AI CHAT (Google Gemini - Free) =====
+function getApiKey() {
+  return localStorage.getItem('myday_gemini_key') || '';
+}
+
+function saveApiKey() {
+  const key = $('apiKeyInput').value.trim();
+  if (!key) { showToast('Bitte Key eingeben'); return; }
+  localStorage.setItem('myday_gemini_key', key);
+  showAiChat();
+  showToast('KI verbunden!');
+}
+
+function showAiChat() {
+  $('aiSetup').style.display = 'none';
+  $('aiChat').style.display = 'flex';
+}
+
+function initAiPage() {
+  if (getApiKey()) {
+    showAiChat();
+  }
+}
+
+function gatherContext() {
+  const todos = getTodos();
+  const journal = loadData('myday_journal');
+  const notes = loadData('myday_notes');
+  const reminders = loadData('myday_reminders');
+
+  const todayEntries = journal.filter(e => e.date === todayKey());
+  const recentEntries = journal.slice(-10);
+
+  let ctx = `Heute ist ${new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.\n\n`;
+
+  if (todos.length) {
+    ctx += `HEUTIGE AUFGABEN:\n`;
+    todos.forEach(t => ctx += `- [${t.done ? 'x' : ' '}] ${t.text}\n`);
+    ctx += '\n';
+  }
+
+  if (todayEntries.length) {
+    ctx += `HEUTIGE TAGEBUCH-EINTRAEGE:\n`;
+    todayEntries.forEach(e => ctx += `- ${e.time}: ${e.text}\n`);
+    ctx += '\n';
+  }
+
+  if (recentEntries.length > todayEntries.length) {
+    ctx += `LETZTE EINTRAEGE (vergangene Tage):\n`;
+    recentEntries.filter(e => e.date !== todayKey()).forEach(e => ctx += `- ${e.date} ${e.time}: ${e.text}\n`);
+    ctx += '\n';
+  }
+
+  if (notes.length) {
+    ctx += `NOTIZEN (${notes.length} Stueck):\n`;
+    notes.slice(0, 5).forEach(n => ctx += `- "${n.title}": ${n.content.slice(0, 100)}\n`);
+    ctx += '\n';
+  }
+
+  if (reminders.length) {
+    ctx += `ERINNERUNGEN:\n`;
+    reminders.forEach(r => ctx += `- ${r.date} ${r.time}: ${r.text}\n`);
+  }
+
+  return ctx;
+}
+
+function addChatMessage(text, type) {
+  const el = $('chatMessages');
+  const msg = document.createElement('div');
+  msg.className = `chat-msg ${type}`;
+  msg.textContent = text;
+  el.appendChild(msg);
+  el.scrollTop = el.scrollHeight;
+  return msg;
+}
+
+function sendAiSuggestion(text) {
+  $('chatInput').value = '';
+  sendChatMessage(text);
+}
+
+function sendChat() {
+  const input = $('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  sendChatMessage(text);
+}
+
+async function sendChatMessage(userText) {
+  addChatMessage(userText, 'user');
+
+  const loadingMsg = addChatMessage('Denke nach...', 'ai loading');
+  const sendBtn = $('chatSendBtn');
+  sendBtn.disabled = true;
+
+  const apiKey = getApiKey();
+  const context = gatherContext();
+
+  const systemPrompt = `Du bist ein freundlicher, persoenlicher KI-Assistent in der App "MyDay".
+Du hilfst dem Nutzer bei seinem Alltag, seinen Aufgaben und Notizen.
+Antworte immer auf Deutsch, kurz und hilfreich.
+Du hast Zugriff auf die Daten des Nutzers:
+
+${context}
+
+Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten des Nutzers.`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts: [{ text: userText }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1024
+          }
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      loadingMsg.textContent = `Fehler: ${data.error.message || 'API-Fehler'}`;
+      loadingMsg.classList.add('error');
+    } else {
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Keine Antwort erhalten.';
+      loadingMsg.textContent = aiText;
+      loadingMsg.classList.remove('loading');
+    }
+  } catch (err) {
+    loadingMsg.textContent = 'Verbindungsfehler. Pruefe deine Internetverbindung.';
+  }
+
+  sendBtn.disabled = false;
+}
+
+$('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
 
 // ===== MODAL CLOSE ON OVERLAY =====
 document.querySelectorAll('.modal-overlay').forEach(ov => {

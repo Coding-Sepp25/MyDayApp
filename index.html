@@ -109,6 +109,48 @@
         <div class="section-label">Eintraege</div>
         <div id="historyList"></div>
       </div>
+
+      <!-- ===== KI ASSISTENT ===== -->
+      <div class="page" id="page-ai">
+        <div class="page-header">
+          <div class="page-header-icon">&#10024;</div>
+          <h1>KI Assistent</h1>
+          <p>Frag mich alles ueber deinen Tag</p>
+        </div>
+
+        <!-- API Key Setup -->
+        <div id="aiSetup" class="ai-setup">
+          <div class="ai-setup-card">
+            <div style="font-size:1.5rem;margin-bottom:8px">&#128273;</div>
+            <h3>Kostenloser API-Key</h3>
+            <p>Die KI nutzt Google Gemini (komplett gratis).</p>
+            <ol>
+              <li>Gehe zu <strong>aistudio.google.com</strong></li>
+              <li>Klick auf <strong>"Get API Key"</strong></li>
+              <li>Kopiere den Key und fuege ihn hier ein</li>
+            </ol>
+            <input type="text" id="apiKeyInput" placeholder="API Key einfuegen...">
+            <button class="btn btn-full" style="margin-top:8px" onclick="saveApiKey()">Verbinden</button>
+          </div>
+        </div>
+
+        <!-- Chat -->
+        <div id="aiChat" class="ai-chat" style="display:none">
+          <div class="ai-suggestions">
+            <button class="ai-chip" onclick="sendAiSuggestion('Fass meinen Tag zusammen')">Tages-Zusammenfassung</button>
+            <button class="ai-chip" onclick="sendAiSuggestion('Was sollte ich heute noch machen?')">Aufgaben-Vorschlaege</button>
+            <button class="ai-chip" onclick="sendAiSuggestion('Gib mir Motivation fuer den Tag')">Motivation</button>
+            <button class="ai-chip" onclick="sendAiSuggestion('Analysiere meine Woche')">Wochen-Analyse</button>
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-bar">
+            <input type="text" id="chatInput" placeholder="Frag mich etwas...">
+            <button class="btn" id="chatSendBtn" onclick="sendChat()">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== BOTTOM NAV ===== -->
@@ -128,6 +170,10 @@
       <button class="nav-btn" data-page="history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
         <span>Verlauf</span>
+      </button>
+      <button class="nav-btn" data-page="ai">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5Z"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>
+        <span>KI</span>
       </button>
     </nav>
 
