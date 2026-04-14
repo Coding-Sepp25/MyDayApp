@@ -570,7 +570,7 @@ Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten 
         'X-Title': 'MyDay App'
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        model: 'google/gemma-4-31b-it:free',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userText }
