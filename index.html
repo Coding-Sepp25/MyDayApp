@@ -123,12 +123,13 @@
           <div class="ai-setup-card">
             <div style="font-size:1.5rem;margin-bottom:8px">&#128273;</div>
             <h3>Kostenloser API-Key</h3>
-            <p>Die KI nutzt Groq (komplett gratis, keine Kreditkarte).</p>
+            <p>Die KI nutzt HuggingFace (komplett gratis).</p>
             <ol>
-              <li>Gehe zu <strong>console.groq.com/keys</strong></li>
-              <li>Erstelle ein kostenloses Konto (Google-Login geht)</li>
-              <li>Klick auf <strong>"Create API Key"</strong></li>
-              <li>Kopiere den Key und fuege ihn hier ein</li>
+              <li>Gehe zu <strong>huggingface.co/settings/tokens</strong></li>
+              <li>Melde dich an (GitHub-Login funktioniert!)</li>
+              <li>Klick auf <strong>"Create new token"</strong></li>
+              <li>Waehle <strong>"Read"</strong> als Berechtigung</li>
+              <li>Kopiere den Token und fuege ihn hier ein</li>
             </ol>
             <input type="text" id="apiKeyInput" placeholder="API Key einfuegen...">
             <button class="btn btn-full" style="margin-top:8px" onclick="saveApiKey()">Verbinden</button>
