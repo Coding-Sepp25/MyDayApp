@@ -560,37 +560,53 @@ ${context}
 
 Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten des Nutzers.`;
 
-  try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://coding-sepp25.github.io/MyDayApp/',
-        'X-Title': 'MyDay App'
-      },
-      body: JSON.stringify({
-        model: 'google/gemma-4-31b-it:free',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userText }
-        ],
-        temperature: 0.7,
-        max_tokens: 1024
-      })
-    });
+  const freeModels = [
+    'google/gemma-4-31b-it:free',
+    'google/gemma-4-26b-a4b-it:free',
+    'nvidia/nemotron-3-nano-30b-a3b:free',
+    'qwen/qwen3-next-80b-a3b-instruct:free'
+  ];
 
-    const data = await response.json();
+  let success = false;
 
-    if (!response.ok) {
-      const errMsg = data.error?.message || data.error || 'API-Fehler';
-      loadingMsg.textContent = `Fehler: ${errMsg}`;
-    } else {
-      loadingMsg.textContent = data.choices?.[0]?.message?.content || 'Keine Antwort erhalten.';
-      loadingMsg.classList.remove('loading');
+  for (const model of freeModels) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://coding-sepp25.github.io/MyDayApp/',
+          'X-Title': 'MyDay App'
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userText }
+          ],
+          temperature: 0.7,
+          max_tokens: 1024
+        })
+      });
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+
+      if (text) {
+        loadingMsg.textContent = text;
+        loadingMsg.classList.remove('loading');
+        success = true;
+        break;
+      }
+      // Provider error -> try next model
+    } catch (err) {
+      continue;
     }
-  } catch (err) {
-    loadingMsg.textContent = 'Verbindungsfehler. Pruefe deine Internetverbindung.';
+  }
+
+  if (!success) {
+    loadingMsg.textContent = 'Die KI ist gerade ueberlastet. Versuch es in ein paar Sekunden nochmal.';
   }
 
   sendBtn.disabled = false;
