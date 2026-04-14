@@ -560,35 +560,51 @@ ${context}
 
 Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten des Nutzers.`;
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: userText }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024
-          }
-        })
+  const models = [
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-8b'
+  ];
+
+  const requestBody = JSON.stringify({
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ parts: [{ text: userText }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+  });
+
+  let success = false;
+
+  for (const model of models) {
+    try {
+      loadingMsg.textContent = 'Denke nach...';
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody }
+      );
+
+      const data = await response.json();
+
+      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        loadingMsg.textContent = data.candidates[0].content.parts[0].text;
+        loadingMsg.classList.remove('loading');
+        success = true;
+        break;
       }
-    );
 
-    const data = await response.json();
-
-    if (data.error) {
-      loadingMsg.textContent = `Fehler: ${data.error.message || 'API-Fehler'}`;
-      loadingMsg.classList.add('error');
-    } else {
-      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Keine Antwort erhalten.';
-      loadingMsg.textContent = aiText;
-      loadingMsg.classList.remove('loading');
+      if (data.error && !data.error.message?.includes('quota') && !data.error.message?.includes('429')) {
+        loadingMsg.textContent = `Fehler: ${data.error.message}`;
+        success = true;
+        break;
+      }
+      // quota error -> try next model
+    } catch (err) {
+      continue;
     }
-  } catch (err) {
-    loadingMsg.textContent = 'Verbindungsfehler. Pruefe deine Internetverbindung.';
+  }
+
+  if (!success) {
+    loadingMsg.textContent = 'Alle Modelle sind gerade ausgelastet. Bitte versuche es in einer Minute nochmal.';
   }
 
   sendBtn.disabled = false;

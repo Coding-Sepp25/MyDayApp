@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myday-v3';
+const CACHE_NAME = 'myday-v4';
 const ASSETS = [
   './',
   './index.html',
