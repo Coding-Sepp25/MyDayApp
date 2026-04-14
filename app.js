@@ -562,7 +562,7 @@ Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten 
 
   try {
     const response = await fetch(
-      'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions',
+      'https://api-inference.huggingface.co/v1/chat/completions',
       {
         method: 'POST',
         headers: {
@@ -583,8 +583,8 @@ Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten 
 
     const data = await response.json();
 
-    if (data.error) {
-      loadingMsg.textContent = `Fehler: ${data.error || 'API-Fehler'}`;
+    if (!response.ok) {
+      loadingMsg.textContent = `Fehler: ${data.error || data.message || 'API-Fehler'}`;
     } else {
       loadingMsg.textContent = data.choices?.[0]?.message?.content || 'Keine Antwort erhalten.';
       loadingMsg.classList.remove('loading');
