@@ -453,13 +453,13 @@ function renderHistory() {
 
 // ===== AI CHAT (Google Gemini - Free) =====
 function getApiKey() {
-  return localStorage.getItem('myday_gemini_key') || '';
+  return localStorage.getItem('myday_groq_key') || localStorage.getItem('myday_gemini_key') || '';
 }
 
 function saveApiKey() {
   const key = $('apiKeyInput').value.trim();
   if (!key) { showToast('Bitte Key eingeben'); return; }
-  localStorage.setItem('myday_gemini_key', key);
+  localStorage.setItem('myday_groq_key', key);
   showAiChat();
   showToast('KI verbunden!');
 }
@@ -560,51 +560,34 @@ ${context}
 
 Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten des Nutzers.`;
 
-  const models = [
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-8b'
-  ];
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userText }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
 
-  const requestBody = JSON.stringify({
-    system_instruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ parts: [{ text: userText }] }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-  });
+    const data = await response.json();
 
-  let success = false;
-
-  for (const model of models) {
-    try {
-      loadingMsg.textContent = 'Denke nach...';
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody }
-      );
-
-      const data = await response.json();
-
-      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        loadingMsg.textContent = data.candidates[0].content.parts[0].text;
-        loadingMsg.classList.remove('loading');
-        success = true;
-        break;
-      }
-
-      if (data.error && !data.error.message?.includes('quota') && !data.error.message?.includes('429')) {
-        loadingMsg.textContent = `Fehler: ${data.error.message}`;
-        success = true;
-        break;
-      }
-      // quota error -> try next model
-    } catch (err) {
-      continue;
+    if (data.error) {
+      loadingMsg.textContent = `Fehler: ${data.error.message || 'API-Fehler'}`;
+    } else {
+      loadingMsg.textContent = data.choices?.[0]?.message?.content || 'Keine Antwort erhalten.';
+      loadingMsg.classList.remove('loading');
     }
-  }
-
-  if (!success) {
-    loadingMsg.textContent = 'Alle Modelle sind gerade ausgelastet. Bitte versuche es in einer Minute nochmal.';
+  } catch (err) {
+    loadingMsg.textContent = 'Verbindungsfehler. Pruefe deine Internetverbindung.';
   }
 
   sendBtn.disabled = false;
