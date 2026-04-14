@@ -394,6 +394,8 @@ setInterval(() => {
 }, 30000);
 
 // ===== HISTORY =====
+let selectedHistoryDate = null;
+
 function renderHistory() {
   const allKeys = Object.keys(localStorage).filter(k => k.startsWith('myday_todos_'));
   let totalDone = 0;
@@ -427,28 +429,77 @@ function renderHistory() {
   $('statStreak').textContent = streak;
   $('statReminders').textContent = reminders.length;
 
-  // Journal grouped
-  const grouped = {};
-  journal.forEach(e => { (grouped[e.date] = grouped[e.date] || []).push(e); });
-  const dates = Object.keys(grouped).sort().reverse();
-
+  // Build day list for last 14 days
   const el = $('historyList');
-  if (!dates.length) {
+  const days = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const dayJournal = journal.filter(e => e.date === key);
+    const dayTodos = loadData('myday_todos_' + key);
+    const hasContent = dayJournal.length > 0 || (dayTodos && dayTodos.length > 0);
+    days.push({ key, dayJournal, dayTodos: dayTodos || [], hasContent });
+  }
+
+  if (!days.some(d => d.hasContent)) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">&#128197;</div><p>Noch keine Eintraege</p></div>';
     return;
   }
 
-  el.innerHTML = dates.map(date => `
-    <div class="history-group">
-      <div class="history-date">${formatDate(date)}</div>
-      ${grouped[date].map(e => `
-        <div class="history-entry">
-          <div class="history-entry-time">${e.time}</div>
-          ${escapeHtml(e.text)}
+  el.innerHTML = days.filter(d => d.hasContent).map(d => {
+    const dateObj = new Date(d.key + 'T00:00:00');
+    const dayName = dateObj.toLocaleDateString('de-DE', { weekday: 'long' });
+    const dateStr = dateObj.toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
+    const isToday = d.key === todayKey();
+    const isOpen = selectedHistoryDate === d.key;
+    const entryCount = d.dayJournal.length;
+    const tasksDone = d.dayTodos.filter(t => t.done).length;
+    const tasksTotal = d.dayTodos.length;
+
+    let details = '';
+    if (isOpen) {
+      details = '<div class="day-details">';
+      if (d.dayTodos.length) {
+        details += '<div class="day-detail-label">Aufgaben</div>';
+        details += d.dayTodos.map(t =>
+          `<div class="day-detail-item"><span style="color:${t.done ? 'var(--green)' : 'var(--text-tertiary)'}">${t.done ? '&#10003;' : '&#9675;'}</span> ${escapeHtml(t.text)}</div>`
+        ).join('');
+      }
+      if (d.dayJournal.length) {
+        details += '<div class="day-detail-label" style="margin-top:10px">Tagebuch</div>';
+        details += d.dayJournal.map(e =>
+          `<div class="day-detail-entry"><span class="day-detail-time">${e.time}</span>${escapeHtml(e.text)}</div>`
+        ).join('');
+      }
+      details += '</div>';
+    }
+
+    let summary = [];
+    if (entryCount) summary.push(`${entryCount} Eintrag${entryCount > 1 ? 'e' : ''}`);
+    if (tasksTotal) summary.push(`${tasksDone}/${tasksTotal} Aufgaben`);
+
+    return `
+      <div class="day-row ${isOpen ? 'open' : ''}" onclick="toggleHistoryDay('${d.key}')">
+        <div class="day-row-header">
+          <div class="day-row-left">
+            <div class="day-row-name">${isToday ? 'Heute' : dayName}</div>
+            <div class="day-row-date">${dateStr}</div>
+          </div>
+          <div class="day-row-right">
+            <span class="day-row-summary">${summary.join(' · ')}</span>
+            <span class="day-row-arrow">${isOpen ? '&#9660;' : '&#9654;'}</span>
+          </div>
         </div>
-      `).join('')}
-    </div>
-  `).join('');
+        ${details}
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleHistoryDay(key) {
+  selectedHistoryDate = selectedHistoryDate === key ? null : key;
+  renderHistory();
 }
 
 // ===== AI CHAT (Google Gemini - Free) =====
@@ -549,16 +600,23 @@ function handleAction(userText) {
   const lower = userText.toLowerCase();
 
   // Journal / Tagebuch
-  if (lower.includes('tagebuch') || lower.includes('eintrag') || lower.includes('einfuegen') || lower.includes('einfügen') || lower.includes('speicher')) {
-    // Extract content - remove action words
-    let content = userText
-      .replace(/kannst du|bitte|mir|ins tagebuch|in mein tagebuch|einfuegen|einfügen|einen eintrag|eintrag|machen|schreib|speicher|speichern|was ich|heute|gemacht habe|,?\s*dass ich/gi, '')
-      .replace(/^\s*[,:.\-]+\s*/, '')
-      .trim();
-
-    // If content is too short, use original message
-    if (content.length < 5) {
-      content = userText.replace(/kannst du.*?(tagebuch|eintrag).*?[:,]?\s*/i, '').trim();
+  if (lower.includes('tagebuch') || lower.includes('eintrag') || lower.includes('einfügen') || lower.includes('einfuegen')) {
+    // Find the actual content after the instruction part
+    // Match everything after "tagebuch" or "eintrag" + optional separator
+    let content = '';
+    const patterns = [
+      /(?:tagebuch|eintrag)[^:,]*[.:,]\s*(.*)/is,
+      /(?:tagebuch|eintrag)\s+(.+)/is,
+      /(?:gemacht habe|erledigt)[.:,]?\s*(.*)/is
+    ];
+    for (const p of patterns) {
+      const m = userText.match(p);
+      if (m && m[1] && m[1].trim().length > 2) { content = m[1].trim(); break; }
+    }
+    // Fallback: take everything after first comma or colon
+    if (!content) {
+      const sep = userText.search(/[,:]\s/);
+      if (sep > 0) content = userText.slice(sep + 1).trim();
     }
 
     if (content.length > 2) {

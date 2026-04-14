@@ -520,21 +520,100 @@ textarea {
   margin-top: 2px;
 }
 
-/* ===== HISTORY ENTRIES ===== */
-.history-group { margin-bottom: 20px; }
-
-.history-date {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  padding: 4px 0;
-  margin-bottom: 6px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 5;
+/* ===== HISTORY - Clickable Days ===== */
+.day-row {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  overflow: hidden;
 }
 
+.day-row:hover { border-color: var(--border-strong); }
+.day-row.open { border-color: var(--accent); }
+
+.day-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.day-row-left { flex: 1; }
+
+.day-row-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.day-row-date {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.day-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-row-summary {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.day-row-arrow {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  transition: transform 0.15s;
+}
+
+/* Day details (expanded) */
+.day-details {
+  padding: 0 16px 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 0;
+  padding-top: 12px;
+}
+
+.day-detail-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.day-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  padding: 3px 0;
+}
+
+.day-detail-entry {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  white-space: pre-wrap;
+}
+
+.day-detail-entry:last-child { border-bottom: none; }
+
+.day-detail-time {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-right: 8px;
+}
+
+/* Keep for today page entries */
 .history-entry {
   padding: 8px 12px;
   border-left: 2px solid var(--border-strong);
