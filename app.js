@@ -518,6 +518,9 @@ function gatherContext() {
   return ctx;
 }
 
+// Chat history for context
+let chatHistory = [];
+
 function addChatMessage(text, type) {
   const el = $('chatMessages');
   const msg = document.createElement('div');
@@ -541,8 +544,58 @@ function sendChat() {
   sendChatMessage(text);
 }
 
+// Detect if user wants to create a journal entry, task, or reminder
+function handleAction(userText) {
+  const lower = userText.toLowerCase();
+
+  // Journal / Tagebuch
+  if (lower.includes('tagebuch') || lower.includes('eintrag') || lower.includes('einfuegen') || lower.includes('einfügen') || lower.includes('speicher')) {
+    // Extract content - remove action words
+    let content = userText
+      .replace(/kannst du|bitte|mir|ins tagebuch|in mein tagebuch|einfuegen|einfügen|einen eintrag|eintrag|machen|schreib|speicher|speichern|was ich|heute|gemacht habe|,?\s*dass ich/gi, '')
+      .replace(/^\s*[,:.\-]+\s*/, '')
+      .trim();
+
+    // If content is too short, use original message
+    if (content.length < 5) {
+      content = userText.replace(/kannst du.*?(tagebuch|eintrag).*?[:,]?\s*/i, '').trim();
+    }
+
+    if (content.length > 2) {
+      const entries = loadData('myday_journal');
+      entries.push({
+        id: generateId(),
+        text: content,
+        date: todayKey(),
+        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+      });
+      saveData('myday_journal', entries);
+      renderTodayEntries();
+      return content;
+    }
+  }
+
+  // Task / Aufgabe
+  if (lower.includes('aufgabe') || lower.includes('todo') || lower.includes('zu erledigen')) {
+    let task = userText.replace(/.*?(aufgabe|todo|zu erledigen)[:\s]*/i, '').trim();
+    if (task.length > 2) {
+      const todos = getTodos();
+      todos.push({ id: generateId(), text: task, done: false });
+      saveTodos(todos);
+      renderTodos();
+      return '__task__' + task;
+    }
+  }
+
+  return null;
+}
+
 async function sendChatMessage(userText) {
   addChatMessage(userText, 'user');
+  chatHistory.push({ role: 'user', content: userText });
+
+  // Check for actions (journal, tasks)
+  const action = handleAction(userText);
 
   const loadingMsg = addChatMessage('Denke nach...', 'ai loading');
   const sendBtn = $('chatSendBtn');
@@ -551,6 +604,13 @@ async function sendChatMessage(userText) {
   const apiKey = getApiKey();
   const context = gatherContext();
 
+  let actionHint = '';
+  if (action && action.startsWith('__task__')) {
+    actionHint = `\n\nHINWEIS: Du hast gerade die Aufgabe "${action.replace('__task__', '')}" zur Aufgabenliste hinzugefuegt. Bestaetige das dem Nutzer kurz.`;
+  } else if (action) {
+    actionHint = `\n\nHINWEIS: Du hast gerade "${action}" ins Tagebuch eingetragen. Bestaetige das dem Nutzer kurz und freundlich.`;
+  }
+
   const systemPrompt = `Du bist ein freundlicher, persoenlicher KI-Assistent in der App "MyDay".
 Du hilfst dem Nutzer bei seinem Alltag, seinen Aufgaben und Notizen.
 Antworte immer auf Deutsch, kurz und hilfreich.
@@ -558,7 +618,14 @@ Du hast Zugriff auf die Daten des Nutzers:
 
 ${context}
 
-Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten des Nutzers.`;
+Du kannst fuer den Nutzer Tagebuch-Eintraege erstellen und Aufgaben hinzufuegen.
+Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten des Nutzers.${actionHint}`;
+
+  // Build messages with chat history (last 10 messages for context)
+  const historyMessages = chatHistory.slice(-10).map(m => ({
+    role: m.role,
+    content: m.content
+  }));
 
   const freeModels = [
     'google/gemma-4-31b-it:free',
@@ -583,7 +650,7 @@ Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten 
           model,
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: userText }
+            ...historyMessages
           ],
           temperature: 0.7,
           max_tokens: 1024
@@ -596,17 +663,23 @@ Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten 
       if (text) {
         loadingMsg.textContent = text;
         loadingMsg.classList.remove('loading');
+        chatHistory.push({ role: 'assistant', content: text });
         success = true;
         break;
       }
-      // Provider error -> try next model
     } catch (err) {
       continue;
     }
   }
 
   if (!success) {
-    loadingMsg.textContent = 'Die KI ist gerade ueberlastet. Versuch es in ein paar Sekunden nochmal.';
+    const fallbackMsg = action
+      ? (action.startsWith('__task__')
+        ? `Aufgabe "${action.replace('__task__', '')}" hinzugefuegt!`
+        : `"${action}" ins Tagebuch eingetragen!`)
+      : 'Die KI ist gerade ueberlastet. Versuch es in ein paar Sekunden nochmal.';
+    loadingMsg.textContent = fallbackMsg;
+    loadingMsg.classList.remove('loading');
   }
 
   sendBtn.disabled = false;
