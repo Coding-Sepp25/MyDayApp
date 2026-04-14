@@ -453,13 +453,13 @@ function renderHistory() {
 
 // ===== AI CHAT (Google Gemini - Free) =====
 function getApiKey() {
-  return localStorage.getItem('myday_hf_key') || '';
+  return localStorage.getItem('myday_or_key') || '';
 }
 
 function saveApiKey() {
   const key = $('apiKeyInput').value.trim();
   if (!key) { showToast('Bitte Key eingeben'); return; }
-  localStorage.setItem('myday_hf_key', key);
+  localStorage.setItem('myday_or_key', key);
   showAiChat();
   showToast('KI verbunden!');
 }
@@ -561,30 +561,30 @@ ${context}
 Sei ermutigend, praktisch und konkret. Gib Tipps basierend auf den echten Daten des Nutzers.`;
 
   try {
-    const response = await fetch(
-      'https://api-inference.huggingface.co/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'mistralai/Mistral-7B-Instruct-v0.3',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userText }
-          ],
-          temperature: 0.7,
-          max_tokens: 1024
-        })
-      }
-    );
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://coding-sepp25.github.io/MyDayApp/',
+        'X-Title': 'MyDay App'
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userText }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
-      loadingMsg.textContent = `Fehler: ${data.error || data.message || 'API-Fehler'}`;
+      const errMsg = data.error?.message || data.error || 'API-Fehler';
+      loadingMsg.textContent = `Fehler: ${errMsg}`;
     } else {
       loadingMsg.textContent = data.choices?.[0]?.message?.content || 'Keine Antwort erhalten.';
       loadingMsg.classList.remove('loading');
